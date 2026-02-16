@@ -1,0 +1,60 @@
+### GET /api/campanas recupera todas las campañas
+GET http://localhost:3000/api/campanas
+
+### GET /api/campanas/graph recupera todas las campañas
+GET http://localhost:3000/api/campanas/graph
+
+### GET /api/campanas/:id recupera una campaña
+GET http://localhost:3000/api/campanas/1
+
+### GET /api/campanas/:id recupera una campaña - NOT FOUND(404)
+GET http://localhost:3000/api/campanas/50
+
+### GET /api/campanas/ con parametros recupera todas las campañas que cumplen los filtros
+### nombre_campana=C
+GET http://localhost:3000/api/campanas?nombre_campana=C
+### objetivo_litros_campana_min
+GET http://localhost:3000/api/campanas?objetivo_litros_campana_min=120
+### objetivo_litros_campana_max
+GET http://localhost:3000/api/campanas?objetivo_litros_campana_max=100
+### objetivo_litros_campana_min y objetivo_litros_campana_max
+GET http://localhost:3000/api/campanas?objetivo_litros_campana_min=90&objetivo_litros_campana_max=120
+### fecha_inicio_campana=2024-12-26
+GET http://localhost:3000/api/campanas?fecha_inicio_campana=2024-12-26
+### fecha_fin_campana=2024-03-17
+GET http://localhost:3000/api/campanas?fecha_fin_campana=2024-03-17
+### fecha_inicio_campana y fecha_fin_campana
+GET http://localhost:3000/api/campanas?fecha_inicio_campana=2026-01-11&fecha_fin_campana=2026-01-14
+### urgente_campana=true
+GET http://localhost:3000/api/campanas?urgente_campana=true
+
+### POST /api/campanas/ crea una campaña 
+POST http://localhost:3000/api/campanas
+Content-Type: application/json
+
+{
+    "nombre_campana": "Maratón Borrar",
+    "objetivo_litros_campana": "1.00",
+    "fecha_inicio_campana": "2024-03-01",
+    "fecha_fin_campana": "2024-03-05",
+    "urgente_campana": true
+}
+
+### Borrado de un campaña que no existe (404)
+DELETE http://localhost:3000/api/campanas/11
+
+### Borrado de un campaña
+DELETE http://localhost:3000/api/campanas/9
+
+### Actualización de un campaña
+PUT http://localhost:3000/api/campanas/10
+Content-Type: application/json
+
+{
+    "id_campana": 10,
+    "nombre_campana": "Maratón Borrar",
+    "objetivo_litros_campana": "1.00",
+    "fecha_inicio_campana": "2024-03-01",
+    "fecha_fin_campana": "2024-03-05",
+    "urgente_campana": false
+}
