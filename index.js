@@ -11,6 +11,8 @@ const PORT = config.port
 
 // Rutas de la API
 const usuarioRoutes = require('./routes/usuarioRoutes.js')
+const recetaRoutes = require('./routes/recetaRoutes.js')
+const ingredienteRoutes = require('./routes/ingredienteRoutes.js')
 
 // ============================================
 // INICIALIZACIÓN
@@ -37,6 +39,8 @@ app.use(express.static(path.join(__dirname, 'public')))
 // RUTAS - API REST
 // ============================================
 app.use('/api/usuarios', usuarioRoutes)
+app.use('/api/recetas', recetaRoutes)
+app.use('/api/ingredientes', ingredienteRoutes)
 
 // ============================================
 // SERVIDOR

@@ -1,4 +1,3 @@
-// controllers/campañaController.js
 const { logMensaje } = require('../utils/logger.js')
 const usuarioService = require('../services/usuarioService.js')
 const { singleUserDTO } = require('../utils/usuarioDTO.js')
@@ -7,13 +6,14 @@ class UsuarioController {
   async loginUsuario (req, res) {
     const usuarioBody = req.body
     try {
-      const usuario = await usuarioService.loginUsuario(usuarioBody)
+      const { usuario, token } = await usuarioService.loginUsuario(usuarioBody)
 
-      // Sanitizamos el objeto creado
+      // Sanitizamos el objeto creado para solo mandar nombre y email
       const usuarioSanitizado = singleUserDTO(usuario)
       return res.status(201).json({
         ok: true,
         datos: usuarioSanitizado,
+        token,
         mensaje: 'Usuario logueado correctamente'
       })
     } catch (err) {
@@ -28,15 +28,15 @@ class UsuarioController {
 
   async registerUsuario (req, res) {
     const usuario = req.body
-
     try {
-      const usuarioNew = await usuarioService.registerUsuario(usuario)
-      // Sanitizamos el objeto creado
+      const { usuarioNew, token } = await usuarioService.registerUsuario(usuario)
+      // Sanitizamos el objeto creado para solo mandar nombre y email
       const usuarioSanitizado = singleUserDTO(usuarioNew)
 
       return res.status(201).json({
         ok: true,
         datos: usuarioSanitizado,
+        token,
         mensaje: 'Usuario registrado correctamente'
       })
     } catch (err) {
@@ -44,7 +44,7 @@ class UsuarioController {
       return res.status(400).json({
         ok: false,
         datos: null,
-        mensaje: 'Error al registrar al usuario: ' + err.message
+        mensaje: err.message
       })
     }
   }

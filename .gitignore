@@ -132,3 +132,6 @@ dist
 
 # drawio.io files
 *.drawio
+
+# Prettier
+.prettierrc

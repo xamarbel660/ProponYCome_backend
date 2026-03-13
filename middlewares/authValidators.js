@@ -43,7 +43,7 @@ const validarLogin = [
       return res.status(400).json({
         ok: false,
         datos: null,
-        mensaje: 'Error al registrar al usuario',
+        mensaje: 'Error al logear al usuario',
         errors: errors.array()
       })
     }

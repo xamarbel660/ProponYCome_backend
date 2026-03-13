@@ -1,22 +1,26 @@
-### Creación del proyecto
-```
+# Creación del proyecto
+
+```bash
 md proyecto
 cd proyecto
 npm init -y
 ```
 
-### Libreria para gestionar ficheros ce configuración
-```
+## Libreria para gestionar ficheros ce configuración
+
+```bash
 npm install dotenv 
 ```
 
-### Instalar nodemon 
-```
+## Instalar nodemon
+
+```bash
 npm install --save-dev nodemon
 ```
 
-### Crear un script para desarrollo en package.json
-```
+## Crear un script para desarrollo en package.json
+
+```bash
  "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
@@ -24,10 +28,13 @@ npm install --save-dev nodemon
   },
   ```
 
-### Crear fichero .env.development con las variables de entorno de desarrollo
-### Este es el fichero que se usa con npm run dev
-### El fichero .env.production se usa con npm start
-```
+## Crear fichero .env.development con las variables de entorno de desarrollo
+
+## Este es el fichero que se usa con npm run dev
+
+## El fichero .env.production se usa con npm start
+
+```bash
 # Configuración de la base de datos
 DB_HOST=localhost
 DB_USER=root
@@ -38,8 +45,9 @@ DB_PORT=3306
 PORT=3000
 ```
 
-### Instalación y configuración de librerías para manejar la base de datos
-```
+## Instalación y configuración de librerías para manejar la base de datos
+
+```bash
 npm i mysql2 sequelize sequelize-auto
 ```
 
@@ -47,26 +55,29 @@ npm i mysql2 sequelize sequelize-auto
 // Utilizar para ello los parámetros definidos en los ficheros de entorno .env
 
 // Probar la conexion
-```
+```bash
 node ./config/sequelize.js
 ```
 
 //Generar los modelos a partir de la estructura de la base de datos (ingeniería inversa)
-```
+```bash
 node ./config/sequelize-auto.js
 ```
 
-### Instalar express, cors
-```
+## Instalar express, cors
+
+```bash
 npm i express cors
 ```
 
-### Ejecutar proyecto
-```
+## Ejecutar proyecto
+
+```bash
 npm run dev
 ```
 
-### Instalar librerías para montar un sistema de autentificación basado en JWT
-```
+## Instalar librerías para montar un sistema de autentificación basado en JWT
+
+```bash
 npm install jsonwebtoken cookie-parser bcrypt
 ```

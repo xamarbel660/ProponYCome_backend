@@ -22,6 +22,10 @@ module.exports = function(sequelize, DataTypes) {
     cantidad: {
       type: DataTypes.DECIMAL(10,2),
       allowNull: false
+    },
+    unidad: {
+      type: DataTypes.STRING(50),
+      allowNull: false
     }
   }, {
     sequelize,

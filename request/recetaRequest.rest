@@ -1,0 +1,54 @@
+### Recuperar recetas de un usuario
+POST http://localhost:3000/api/recetas
+Content-Type: application/json
+
+{
+    "email": "rubenM@gmail.com",
+    "password_hash": "ruben123"
+}
+
+### Crear recetas
+POST http://localhost:3000/api/recetas/new
+Content-Type: application/json
+
+{
+    "receta": {
+        "titulo": "Receta de prueba",
+        "descripcion": "Descripcion de prueba",
+        "dificultad": "Fácil"
+    },
+    "ingredientes": [
+            {
+                "nombre_ingrediente": "Ingrediente de prueba",
+                "cantidad": 1,
+                "unidad": "unidad"
+            }
+        ]
+}
+
+### Actualizar recetas
+POST http://localhost:3000/api/recetas/update
+Content-Type: application/json
+
+{
+    "email": "rubenM@gmail.com",
+    "password_hash": "ruben123",
+    "receta": {
+        "titulo": "Receta de prueba2",
+        "descripcion": "Descripcion de prueba2",
+        "dificultad": "Facil",
+        "id_usuario_creador": "33ee8808-00c9-48fb-a498-89e96113ec24",
+    },
+    "ingredientes": [
+            {
+                "nombre_ingrediente": "Ingrediente de prueba",
+                "cantidad": 1,
+                "unidad": "unidad"
+            },
+            {
+                "nombre_ingrediente": "Bacon",
+                "cantidad": 2,
+                "unidad": "gramos"
+            }
+        ]
+}

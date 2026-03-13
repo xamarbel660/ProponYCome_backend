@@ -1,4 +1,3 @@
-// services/usuarioService.js
 // Servicio para interactuar con el modelo Sequelize `usuario`
 
 // Recuperar función de inicialización de modelos
@@ -9,37 +8,44 @@ const sequelize = require('../config/sequelize.js')
 const models = initModels(sequelize)
 // Recuperar el modelo director
 const Usuario = models.usuario
-
-// const { Op } = require('sequelize')
+// Usamos bcrypt para encriptar y comparar la contraseña
 const bcrypt = require('bcrypt')
+// Usamos generarToken para generar el token
+const { generarToken } = require('../utils/jwt.js')
 
 class UsuarioService {
   async loginUsuario (usuarioBody) {
+    // Buscamos el usuario por email
     const usuario = await Usuario.findOne({ where: { email: usuarioBody.email } })
     if (!usuario) {
       throw new Error('Usuario no encontrado')
     }
+    // Comparamos la contraseña
     const passwordMatch = await bcrypt.compare(usuarioBody.password_hash, usuario.password_hash)
     if (!passwordMatch) {
       throw new Error('Contraseña incorrecta')
     }
-    return usuario
+    // Generamos el token
+    const token = generarToken(usuario)
+    return { usuario, token }
   }
 
   async registerUsuario (usuario) {
-    // Asegurar que el usuario no existe
+    // Buscamos si el usuario existe
     const usuarioExistente = await Usuario.findOne({ where: { email: usuario.email } })
     if (usuarioExistente) {
-      throw new Error('El usuario ya existe')
+      throw new Error('Ya hay un usuario usando el correo proporcionado')
     }
 
     // Generamos el id_usuario con randomUUID de crypto
     usuario.id_usuario = crypto.randomUUID()
     // Generamos el hash de la contraseña con bcrypt
-    usuario.password_hash = bcrypt.hash(usuario.password_hash, 10)
+    usuario.password_hash = await bcrypt.hash(usuario.password_hash, 10)
 
-    const result = await Usuario.create(usuario)
-    return result
+    const usuarioNew = await Usuario.create(usuario)
+    // Generamos el token
+    const token = generarToken(usuarioNew)
+    return { usuarioNew, token }
   }
 }
 

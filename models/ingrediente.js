@@ -10,11 +10,6 @@ module.exports = function(sequelize, DataTypes) {
     nombre_ingrediente: {
       type: DataTypes.STRING(150),
       allowNull: false
-    },
-    unidad_medida: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-      defaultValue: "unidades"
     }
   }, {
     sequelize,
