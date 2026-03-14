@@ -44,6 +44,48 @@ class RecetaService {
     return { recetas }
   }
 
+  async recuperarRecetasPaginadas (usuarioRecuperado, page, limit) {
+    const offset = (page - 1) * limit
+
+    // Primero contamos el total de recetas del usuario
+    const totalRecetas = await Receta.count({
+      where: { id_usuario_creador: usuarioRecuperado.id_usuario }
+    })
+
+    // Luego recuperamos solo las recetas de esta página
+    const recetas = await Receta.findAll({
+      attributes: [
+        'id_receta',
+        'titulo',
+        'descripcion',
+        'dificultad',
+        [
+          sequelize.fn('COUNT', sequelize.col('id_ingrediente_INGREDIENTEs.nombre_ingrediente')),
+          'cantidadIngredientes'
+        ]
+      ],
+      where: { id_usuario_creador: usuarioRecuperado.id_usuario },
+      include: [
+        {
+          model: Ingrediente,
+          as: 'id_ingrediente_INGREDIENTEs',
+          attributes: [],
+          through: {
+            attributes: []
+          }
+        }
+      ],
+      group: ['receta.id_receta'],
+      subQuery: false,
+      limit,
+      offset,
+      order: [['id_receta', 'ASC']], // Dejamos el orden clásico (las más antiguas primero, que es como estaba antes)
+      raw: true
+    })
+
+    return { recetas, total: totalRecetas }
+  }
+
   async recuperarRecetaPorId (idReceta, usuarioRecuperado) {
     const recetaBd = await Receta.findOne({
       where: { id_receta: idReceta, id_usuario_creador: usuarioRecuperado.id_usuario },

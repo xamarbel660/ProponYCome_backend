@@ -23,6 +23,29 @@ class RecetaController {
     }
   }
 
+  async recuperarRecetasPaginadas (req, res) {
+    const usuarioRecuperado = req.usuario
+    const page = parseInt(req.body.page) || 1
+    const limit = 5
+
+    try {
+      const resultado = await recetaService.recuperarRecetasPaginadas(usuarioRecuperado, page, limit)
+
+      return res.status(201).json({
+        ok: true,
+        datos: resultado,
+        mensaje: 'Recetas recuperadas correctamente'
+      })
+    } catch (err) {
+      logMensaje('Error en recuperarRecetasPaginadas:', err)
+      return res.status(401).json({
+        ok: false,
+        datos: null,
+        mensaje: 'Error al recuperar las recetas paginadas: ' + err.message
+      })
+    }
+  }
+
   async recuperarRecetaPorId (req, res) {
     const idReceta = req.params.id_receta
     const usuarioRecuperado = req.usuario
