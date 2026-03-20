@@ -1,9 +1,9 @@
 const { logMensaje } = require('../utils/logger.js')
 const usuarioService = require('../services/usuarioService.js')
-const { singleUserDTO } = require('../utils/usuarioDTO.js')
+const { singleUserDTO } = require('../utils/modelosDTO.js')
 
 class UsuarioController {
-  async loginUsuario (req, res) {
+  async loginUsuario(req, res) {
     const usuarioBody = req.body
     try {
       const { usuario, token } = await usuarioService.loginUsuario(usuarioBody)
@@ -26,7 +26,7 @@ class UsuarioController {
     }
   }
 
-  async registerUsuario (req, res) {
+  async registerUsuario(req, res) {
     const usuario = req.body
     try {
       const { usuarioNew, token } = await usuarioService.registerUsuario(usuario)

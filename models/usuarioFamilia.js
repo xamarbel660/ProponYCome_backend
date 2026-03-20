@@ -11,7 +11,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     id_familia: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.CHAR(36),
       allowNull: false,
       primaryKey: true,
       references: {

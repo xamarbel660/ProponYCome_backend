@@ -13,6 +13,7 @@ const PORT = config.port
 const usuarioRoutes = require('./routes/usuarioRoutes.js')
 const recetaRoutes = require('./routes/recetaRoutes.js')
 const ingredienteRoutes = require('./routes/ingredienteRoutes.js')
+const familiaRoutes = require('./routes/familiaRoutes.js')
 
 // ============================================
 // INICIALIZACIÓN
@@ -41,6 +42,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('/api/usuarios', usuarioRoutes)
 app.use('/api/recetas', recetaRoutes)
 app.use('/api/ingredientes', ingredienteRoutes)
+app.use('/api/familias', familiaRoutes)
 
 // ============================================
 // SERVIDOR

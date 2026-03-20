@@ -1,4 +1,3 @@
-// controllers/campañaController.js
 const { logMensaje } = require('../utils/logger.js')
 const recetaService = require('../services/recetaService.js')
 

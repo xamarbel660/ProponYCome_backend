@@ -1,6 +1,3 @@
-// services/usuarioService.js
-// Servicio para interactuar con el modelo Sequelize `usuario`
-
 // Recuperar función de inicialización de modelos
 const initModels = require('../models/init-models.js').initModels
 // Crear la instancia de sequelize con la conexión a la base de datos

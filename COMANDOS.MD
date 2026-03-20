@@ -55,11 +55,13 @@ npm i mysql2 sequelize sequelize-auto
 // Utilizar para ello los parámetros definidos en los ficheros de entorno .env
 
 // Probar la conexion
+
 ```bash
 node ./config/sequelize.js
 ```
 
 //Generar los modelos a partir de la estructura de la base de datos (ingeniería inversa)
+
 ```bash
 node ./config/sequelize-auto.js
 ```
