@@ -2,7 +2,6 @@
 // IMPORTACIONES
 // ============================================
 const config = require('./config/config')
-require('dotenv').config()
 const express = require('express')
 const path = require('path')
 const cors = require('cors')
@@ -19,7 +18,6 @@ const familiaRoutes = require('./routes/familiaRoutes.js')
 // INICIALIZACIÓN
 // ============================================
 const app = express()
-const port = process.env.PORT || 3000
 
 // ============================================
 // MIDDLEWARE - PARSEO

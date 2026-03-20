@@ -1,8 +1,15 @@
+const fs = require('fs')
+const path = require('path')
+const dotenv = require('dotenv')
 const { logMensaje } = require('../utils/logger.js')
-// Importar libreria para manejo de ficheros de configuración dependiendo de la variable de entorno NODE_ENV
-require('dotenv').config({
-  path: `.env.${process.env.NODE_ENV || 'development'}`
-})
+
+// Carga un .env especifico por entorno y, si no existe, usa el .env por defecto.
+const nodeEnv = process.env.NODE_ENV || 'development'
+const envByEnvironmentPath = path.resolve(process.cwd(), `.env.${nodeEnv}`)
+const defaultEnvPath = path.resolve(process.cwd(), '.env')
+const envPathToLoad = fs.existsSync(envByEnvironmentPath) ? envByEnvironmentPath : defaultEnvPath
+
+dotenv.config({ path: envPathToLoad })
 
 module.exports = {
   port: process.env.PORT || 3000,
@@ -13,11 +20,9 @@ module.exports = {
     name: process.env.DB_NAME || 'propon_y_come',
     port: process.env.DB_PORT || 3306
   },
-  secretKey: process.env.SECRET_KEY || 'default_secret'
+  secretKey: process.env.JWT_SECRET_KEY || 'change_me_in_production'
 }
 
-logMensaje('DBNAME:', process.env.DB_NAME)
-logMensaje('DBHOST:', process.env.DB_HOST)
-logMensaje('DBUSER:', process.env.DB_USER)
-logMensaje('DBPORT:', process.env.DB_PORT)
-logMensaje('NODE_ENV:', process.env.NODE_ENV)
+if (process.env.NODE_ENV !== 'test') {
+  logMensaje(`Configuracion cargada desde ${path.basename(envPathToLoad)} (NODE_ENV=${nodeEnv})`)
+}
