@@ -1,5 +1,6 @@
 // Recuperar función de inicialización de modelos
 const initModels = require('../models/init-models.js').initModels
+const { Op } = require('sequelize')
 // Crear la instancia de sequelize con la conexión a la base de datos
 const sequelize = require('../config/sequelize.js')
 // Cargar las definiciones del modelo en sequelize
@@ -9,8 +10,36 @@ const Receta = models.receta
 const RecetaIngrediente = models.recetaIngrediente
 const Ingrediente = models.ingrediente
 
+function normalizarIngredientesEntrada(ingredientes = []) {
+  return ingredientes
+    .map((ing) => {
+      if (typeof ing === 'string') {
+        const nombre = ing.trim()
+        if (!nombre) return null
+
+        return {
+          nombre_ingrediente: nombre,
+          cantidad: 1,
+          unidad: 'unidad'
+        }
+      }
+
+      if (!ing || typeof ing !== 'object') return null
+
+      const nombre = String(ing.nombre_ingrediente || '').trim()
+      if (!nombre) return null
+
+      return {
+        nombre_ingrediente: nombre,
+        cantidad: ing.cantidad ?? 1,
+        unidad: ing.unidad || 'unidad'
+      }
+    })
+    .filter(Boolean)
+}
+
 class RecetaService {
-  async recuperarRecetas (usuarioRecuperado) {
+  async recuperarRecetas(usuarioRecuperado) {
     const recetas = await Receta.findAll({
       attributes: [
         'id_receta',
@@ -41,7 +70,7 @@ class RecetaService {
     return { recetas }
   }
 
-  async recuperarRecetasPaginadas (usuarioRecuperado, page, limit) {
+  async recuperarRecetasPaginadas(usuarioRecuperado, page, limit) {
     const offset = (page - 1) * limit
 
     // Primero contamos el total de recetas del usuario
@@ -83,7 +112,7 @@ class RecetaService {
     return { recetas, total: totalRecetas }
   }
 
-  async recuperarRecetaPorId (idReceta, usuarioRecuperado) {
+  async recuperarRecetaPorId(idReceta, usuarioRecuperado) {
     const recetaBd = await Receta.findOne({
       where: { id_receta: idReceta, id_usuario_creador: usuarioRecuperado.id_usuario },
       include: [
@@ -121,18 +150,37 @@ class RecetaService {
     return payload
   }
 
-  async crearReceta (receta, usuarioRecuperado) {
+  async buscarRecetaPorTitulo(titulo, usuarioRecuperado) {
+    const recetas = await Receta.findAll({
+      where: { id_usuario_creador: usuarioRecuperado.id_usuario, titulo: { [Op.like]: `%${titulo}%` } },
+      group: ['receta.id_receta'],
+      raw: true
+    })
+    return { recetas }
+  }
+
+  async crearReceta(receta, usuarioRecuperado) {
     // Iniciamos la transacción
     const t = await sequelize.transaction()
 
     try {
+      const recetaExistente = await this.buscarRecetaPorTitulo(receta.receta.titulo, usuarioRecuperado)
+      if (recetaExistente.recetas.length > 0) {
+        throw new Error('Ya existe una receta con ese título')
+      }
+
+      const ingredientesNormalizados = normalizarIngredientesEntrada(receta.ingredientes)
+      if (ingredientesNormalizados.length === 0) {
+        throw new Error('La receta debe incluir al menos un ingrediente válido')
+      }
+
       // Creamos la receta (le pasamos la transacción)
       // En receta solo viene el titulo, descripcion y dificultad
       receta.receta.id_usuario_creador = usuarioRecuperado.id_usuario
       const recetaCreada = await Receta.create(receta.receta, { transaction: t })
 
       // Usamos for...of para que espere a la base de datos
-      for (const ing of receta.ingredientes) {
+      for (const ing of ingredientesNormalizados) {
         // findOrCreate busca el ingrediente. Si no existe, lo crea automáticamente.
         // 'ingredienteBd' es el objeto de la base de datos, 'created' es un booleano (true si lo acaba de crear)
         const [ingredienteBd] = await Ingrediente.findOrCreate({
@@ -165,10 +213,15 @@ class RecetaService {
     }
   }
 
-  async actualizarReceta (receta, usuarioRecuperado) {
+  async actualizarReceta(receta, usuarioRecuperado) {
     const t = await sequelize.transaction()
 
     try {
+      const ingredientesNormalizados = normalizarIngredientesEntrada(receta.ingredientes)
+      if (ingredientesNormalizados.length === 0) {
+        throw new Error('La receta debe incluir al menos un ingrediente válido')
+      }
+
       receta.receta.id_usuario_creador = usuarioRecuperado.id_usuario
 
       await Receta.update(receta.receta, {
@@ -184,7 +237,7 @@ class RecetaService {
         transaction: t
       })
 
-      for (const ing of receta.ingredientes) {
+      for (const ing of ingredientesNormalizados) {
         // Buscamos/Creamos el ingrediente global
         const [ingredienteBd] = await Ingrediente.findOrCreate({
           where: { nombre_ingrediente: ing.nombre_ingrediente },
@@ -214,7 +267,7 @@ class RecetaService {
     }
   }
 
-  async eliminarReceta (idReceta, usuarioRecuperado) {
+  async eliminarReceta(idReceta, usuarioRecuperado) {
     const result = await Receta.destroy({
       where: {
         id_receta: idReceta,
