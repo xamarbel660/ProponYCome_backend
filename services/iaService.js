@@ -2,7 +2,7 @@ const { GoogleGenAI } = require('@google/genai')
 
 const IA_TOKEN = process.env.IA_API_TOKEN
 const IA_MODEL = process.env.IA_MODEL
-const IA_MODELOS_FALLBACK = process.env.IA_MODELOS_FALLBACK
+const IA_MODELOS_FALLBACK = (process.env.IA_MODELOS_FALLBACK || '')
   .split(',')
   .map((m) => m.trim())
   .filter(Boolean)
@@ -33,8 +33,84 @@ function crearErrorServicioIA(mensaje, status, cause) {
 async function generarConModelo(ai, model, instrucciones) {
   return ai.models.generateContent({
     model,
-    contents: instrucciones
+    contents: instrucciones,
+    config: {
+      responseMimeType: 'application/json'
+    }
   })
+}
+
+function extraerNombreIngrediente(ingrediente) {
+  if (typeof ingrediente === 'string') return ingrediente.trim()
+  if (!ingrediente || typeof ingrediente !== 'object') return ''
+
+  if (typeof ingrediente.nombre_ingrediente === 'string') {
+    return ingrediente.nombre_ingrediente.trim()
+  }
+
+  if (ingrediente.nombre_ingrediente && typeof ingrediente.nombre_ingrediente === 'object') {
+    if (typeof ingrediente.nombre_ingrediente.nombre_ingrediente === 'string') {
+      return ingrediente.nombre_ingrediente.nombre_ingrediente.trim()
+    }
+    if (typeof ingrediente.nombre_ingrediente.nombre === 'string') {
+      return ingrediente.nombre_ingrediente.nombre.trim()
+    }
+  }
+
+  if (typeof ingrediente.nombre === 'string') {
+    return ingrediente.nombre.trim()
+  }
+
+  return ''
+}
+
+function normalizarIngrediente(ingrediente) {
+  const nombre = extraerNombreIngrediente(ingrediente)
+  if (!nombre) return null
+
+  const cantidadRaw = ingrediente && typeof ingrediente === 'object'
+    ? ingrediente.cantidad
+    : null
+  const unidadRaw = ingrediente && typeof ingrediente === 'object'
+    ? ingrediente.unidad
+    : null
+
+  return {
+    nombre_ingrediente: nombre,
+    cantidad: cantidadRaw != null ? String(cantidadRaw) : null,
+    unidad: typeof unidadRaw === 'string' ? unidadRaw.trim() : ''
+  }
+}
+
+function normalizarRecetasIA(payload) {
+  const recetasCrudas = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.recetas)
+      ? payload.recetas
+      : []
+
+  const recetas = recetasCrudas
+    .filter((receta) => receta && typeof receta === 'object')
+    .map((receta) => {
+      const ingredientesCrudos = Array.isArray(receta.ingredientes) ? receta.ingredientes : []
+      const ingredientes = ingredientesCrudos.map(normalizarIngrediente).filter(Boolean)
+
+      const titulo = typeof receta.titulo === 'string' ? receta.titulo.trim() : ''
+      const descripcion = typeof receta.descripcion === 'string' ? receta.descripcion.trim() : ''
+      const dificultad = typeof receta.dificultad === 'string' ? receta.dificultad.trim() : 'Media'
+
+      return {
+        titulo,
+        descripcion,
+        ingredientes,
+        cantidad_ingredientes: ingredientes.length,
+        dificultad
+      }
+    })
+    .filter((receta) => receta.titulo)
+    .slice(0, 5)
+
+  return { recetas }
 }
 
 async function verificarLimiteIA() {
@@ -111,10 +187,15 @@ class IAService {
     const ai = new GoogleGenAI({ apiKey: IA_TOKEN })
     const modelosCandidatos = [IA_MODEL, ...IA_MODELOS_FALLBACK].filter((modelo, index, arr) => arr.indexOf(modelo) === index)
 
+    const ingredientesSeguros = Array.isArray(ingredientes)
+      ? ingredientes.map((ing) => String(ing).trim()).filter(Boolean)
+      : []
+
     const instrucciones = `
     Actúa como un experto chef y nutricionista.
     El usuario te va a pasar una lista de ingredientes. Tu objetivo es devolver 5 recetas que usen algunos o todos esos ingredientes.
-    Si el usuario escribe cosas que no son ingredientes (ej: "hola", "coches", insultos), debes detectarlo.
+    Si el usuario escribe cosas que no son ingredientes (ej: "hola", "coches", insultos), debes detectarlo y mandar 5 recetas mas populares.
+    La dificultad de las recetas pueden ser "Fácil", "Media" o "Difícil" dependiendo de la complejidad de los pasos y la cantidad de ingredientes.
     REGLA DE ORO: TU RESPUESTA DEBE SER ÚNICA Y EXCLUSIVAMENTE UN CÓDIGO JSON VÁLIDO.
     NO ESCRIBAS NADA MÁS ANTES NI DESPUÉS.
 
@@ -124,21 +205,25 @@ class IAService {
           {
             "titulo": "Nombre de la receta",
             "descripcion": "Breve descripción de los pasos a seguir",
-            "ingredientes": [{nombre_ingrediente: 'arroz', cantidad: '1.00', unidad: 'Kl',},
-            {nombre_ingrediente: 'pollo', cantidad: '2.00', unidad: 'Pechugas',
-              }],
+            "ingredientes": [
+              {
+                "nombre_ingrediente": "arroz",
+                "cantidad": "1.00",
+                "unidad": "kg"
+              },
+              {
+                "nombre_ingrediente": "pollo",
+                "cantidad": "2.00",
+                "unidad": "pechugas"
+              }
+            ],
             "cantidad_ingredientes": 2,
             "dificultad": "Fácil"
           }
         ]
       }
 
-    Si no son ingredientes, devuelve:
-      {
-        "recetas": []
-      }
-
-    Ingredientes del usuario: ${ingredientes.join(', ')}
+    Ingredientes del usuario: ${ingredientesSeguros.join(', ')}
     `
 
     let response = null
@@ -182,9 +267,11 @@ class IAService {
       throw crearErrorServicioIA('La respuesta de IA no es un JSON válido', 502, error)
     }
 
+    const recetasNormalizadas = normalizarRecetasIA(respuestaParseada)
+
     await registrarPeticionIA()
 
-    return respuestaParseada
+    return recetasNormalizadas
   }
 }
 
