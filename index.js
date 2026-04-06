@@ -14,6 +14,7 @@ const recetaRoutes = require('./routes/recetaRoutes.js')
 const ingredienteRoutes = require('./routes/ingredienteRoutes.js')
 const familiaRoutes = require('./routes/familiaRoutes.js')
 const iaRoutes = require('./routes/iaRoutes.js')
+const planningRoutes = require('./routes/planningRoutes.js')
 
 // ============================================
 // INICIALIZACIÓN
@@ -43,6 +44,7 @@ app.use('/api/recetas', recetaRoutes)
 app.use('/api/ingredientes', ingredienteRoutes)
 app.use('/api/familias', familiaRoutes)
 app.use('/api/ia', iaRoutes)
+app.use('/api/planning', planningRoutes)
 
 // ============================================
 // SERVIDOR

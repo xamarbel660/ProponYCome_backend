@@ -5,7 +5,7 @@ const sequelize = require('../config/sequelize.js')
 // Cargar las definiciones del modelo en sequelize
 const models = initModels(sequelize)
 const generarCodigoInvitacion = require('../utils/generarCodigoInvitacion')
-// Recuperar el modelo director
+// Modelos que vamos a usar en este servicio
 const Familia = models.familia
 const UsuarioFamilia = models.usuarioFamilia
 const Usuario = models.usuario

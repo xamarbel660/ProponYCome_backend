@@ -1,12 +1,10 @@
-// Servicio para interactuar con el modelo Sequelize `usuario`
-
 // Recuperar función de inicialización de modelos
 const initModels = require('../models/init-models.js').initModels
 // Crear la instancia de sequelize con la conexión a la base de datos
 const sequelize = require('../config/sequelize.js')
 // Cargar las definiciones del modelo en sequelize
 const models = initModels(sequelize)
-// Recuperar el modelo director
+// Recuperar los modelos necesarios
 const Usuario = models.usuario
 // Usamos bcrypt para encriptar y comparar la contraseña
 const bcrypt = require('bcrypt')
@@ -14,7 +12,7 @@ const bcrypt = require('bcrypt')
 const { generarToken } = require('../utils/jwt.js')
 
 class UsuarioService {
-  async loginUsuario (usuarioBody) {
+  async loginUsuario(usuarioBody) {
     // Buscamos el usuario por email
     const usuario = await Usuario.findOne({ where: { email: usuarioBody.email } })
     if (!usuario) {
@@ -30,7 +28,7 @@ class UsuarioService {
     return { usuario, token }
   }
 
-  async registerUsuario (usuario) {
+  async registerUsuario(usuario) {
     // Buscamos si el usuario existe
     const usuarioExistente = await Usuario.findOne({ where: { email: usuario.email } })
     if (usuarioExistente) {

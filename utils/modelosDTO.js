@@ -24,6 +24,17 @@ const singleFamiliaDTO = (familia) => {
   }
 }
 
+const singlePlanningDTO = (planning) => {
+  // Si el usuario es null o undefined, devolvemos null para no romper nada
+  if (!planning) return null
+  // Nunca, bajo ninguna circunstancia, devuelvas la contraseña ni el hash de la contraseña en esta respuesta.
+  return {
+    // Mapeamos los campos que SÍ queremos enviar
+    fecha: planning.fecha,
+    turno_comida: planning.turno_comida
+  }
+}
+
 /**
  * Lista de familias
  */
@@ -33,4 +44,4 @@ const multipleFamiliaDTO = (familias) => {
   return familias.map((familia) => singleFamiliaDTO(familia))
 }
 
-module.exports = { singleUserDTO, singleFamiliaDTO, multipleFamiliaDTO }
+module.exports = { singleUserDTO, singleFamiliaDTO, singlePlanningDTO, multipleFamiliaDTO }

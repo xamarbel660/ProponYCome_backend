@@ -39,14 +39,6 @@ module.exports = function(sequelize, DataTypes) {
         key: 'id_receta'
       }
     },
-    titulo_temporal: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    descripcion_temporal: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
     estado: {
       type: DataTypes.ENUM('PENDIENTE','APROBADO','RECHAZADO'),
       allowNull: true,
