@@ -1,6 +1,5 @@
 var DataTypes = require("sequelize").DataTypes;
 var _familia = require("./familia");
-var _ia = require("./ia");
 var _ingrediente = require("./ingrediente");
 var _listaCompra = require("./listaCompra");
 var _listaCompraItem = require("./listaCompraItem");
@@ -12,7 +11,6 @@ var _usuarioFamilia = require("./usuarioFamilia");
 
 function initModels(sequelize) {
   var familia = _familia(sequelize, DataTypes);
-  var ia = _ia(sequelize, DataTypes);
   var ingrediente = _ingrediente(sequelize, DataTypes);
   var listaCompra = _listaCompra(sequelize, DataTypes);
   var listaCompraItem = _listaCompraItem(sequelize, DataTypes);
@@ -49,7 +47,6 @@ function initModels(sequelize) {
 
   return {
     familia,
-    ia,
     ingrediente,
     listaCompra,
     listaCompraItem,

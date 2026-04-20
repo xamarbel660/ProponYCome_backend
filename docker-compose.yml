@@ -72,6 +72,8 @@ services:
         - IA_API_TOKEN=${IA_API_TOKEN}
         - IA_MODEL=${IA_MODEL}
         - IA_MODELOS_FALLBACK=${IA_MODELOS_FALLBACK}
+        - IA_MAX_REINTENTOS=${IA_MAX_REINTENTOS}
+        - IA_BACKOFF_BASE_MS=${IA_BACKOFF_BASE_MS}
         - IA_MAX_PETICIONES=${IA_MAX_PETICIONES}
       healthcheck:
         test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000',res=>process.exit(res.statusCode<500?0:1)).on('error',()=>process.exit(1))"]

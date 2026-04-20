@@ -6,6 +6,8 @@ const sequelize = require('../config/sequelize.js')
 const models = initModels(sequelize)
 const { Op } = require('sequelize')
 const Planning = models.planning
+const Usuario = models.usuario
+const Receta = models.receta
 const UsuarioFamilia = models.usuarioFamilia
 
 class PlanningService {
@@ -23,16 +25,51 @@ class PlanningService {
     }
 
     const propuestasSemanal = await Planning.findAll({
+      attributes: ['id_planning', 'fecha', 'turno_comida', 'id_familia', 'estado'],
       where: {
         id_familia: datosPropuestas.id_familia,
         fecha: {
           [Op.between]: [datosPropuestas.fecha_inicio, datosPropuestas.fecha_fin]
         },
-        estado: 'APROBADO'
-      }
+        estado: {
+          [Op.ne]: 'RECHAZADO'
+        }
+      },
+      include: [
+        {
+          model: Usuario,
+          as: 'id_usuario_propone_USUARIO',
+          attributes: ['id_usuario', 'nombre']
+        },
+        {
+          model: Receta,
+          as: 'id_receta_RECETum',
+          attributes: ['id_receta', 'titulo', 'dificultad'],
+          required: false
+        }
+      ]
     })
 
-    return propuestasSemanal
+    return propuestasSemanal.map((propuesta) => ({
+      id_planning: propuesta.id_planning,
+      fecha: propuesta.fecha,
+      turno_comida: propuesta.turno_comida,
+      id_familia: propuesta.id_familia,
+      usuario: propuesta.id_usuario_propone_USUARIO
+        ? {
+            id_usuario_propone: propuesta.id_usuario_propone_USUARIO.id_usuario,
+            nombre: propuesta.id_usuario_propone_USUARIO.nombre
+          }
+        : null,
+      receta: propuesta.id_receta_RECETum
+        ? {
+            id_receta: propuesta.id_receta_RECETum.id_receta,
+            titulo: propuesta.id_receta_RECETum.titulo,
+            dificultad: propuesta.id_receta_RECETum.dificultad
+          }
+        : null,
+      estado: propuesta.estado
+    }))
   }
 
   async crearPropuesta(usuarioRecuperado, propuesta) {
@@ -48,11 +85,13 @@ class PlanningService {
       throw new Error('El usuario no pertenece a la familia')
     }
 
-    // Verificar que el usuario no haya propuesto ya para ese turno
+    // Verificar que el usuario no haya propuesto ya para ese turno, dia y familia
     const propuestaExistente = await Planning.findOne({
       where: {
         id_usuario_propone: usuarioRecuperado.id_usuario,
-        turno_comida: propuesta.turno_comida
+        turno_comida: propuesta.turno_comida,
+        fecha: propuesta.fecha,
+        id_familia: propuesta.id_familia
       }
     })
 
