@@ -8,6 +8,7 @@ const singleUserDTO = (usuario) => {
   // Nunca, bajo ninguna circunstancia, devuelvas la contraseña ni el hash de la contraseña en esta respuesta.
   return {
     // Mapeamos los campos que SÍ queremos enviar
+    id_usuario: usuario.id_usuario,
     nombre: usuario.nombre,
     email: usuario.email
   }

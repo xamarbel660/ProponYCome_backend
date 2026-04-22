@@ -89,9 +89,12 @@ class PlanningService {
     const propuestaExistente = await Planning.findOne({
       where: {
         id_usuario_propone: usuarioRecuperado.id_usuario,
-        turno_comida: propuesta.turno_comida,
+        id_familia: propuesta.id_familia,
         fecha: propuesta.fecha,
-        id_familia: propuesta.id_familia
+        turno_comida: propuesta.turno_comida,
+        estado: {
+          [Op.ne]: 'RECHAZADO'
+        }
       }
     })
 
@@ -143,8 +146,18 @@ class PlanningService {
       throw new Error('La propuesta ya ha sido respondida')
     }
 
-    // Poner estado de la propuesta
-    const estadoPropuesta = respuestaAdmin.estado ? 'APROBADO' : 'RECHAZADO'
+    // Poner estado de la propuesta (acepta string APROBADO/RECHAZADO)
+    let estadoPropuesta
+    if (typeof respuestaAdmin.estado === 'string') {
+      const estadoNormalizado = respuestaAdmin.estado.toUpperCase()
+      if (estadoNormalizado !== 'APROBADO' && estadoNormalizado !== 'RECHAZADO') {
+        throw new Error('Estado de propuesta no valido')
+      }
+      estadoPropuesta = estadoNormalizado
+    } else {
+      throw new Error('Estado de propuesta no valido')
+    }
+
     const resultado = await Planning.update(
       { estado: estadoPropuesta },
       {
