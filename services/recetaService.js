@@ -9,6 +9,8 @@ const models = initModels(sequelize)
 const Receta = models.receta
 const RecetaIngrediente = models.recetaIngrediente
 const Ingrediente = models.ingrediente
+const Planning = models.planning
+const UsuarioFamilia = models.usuarioFamilia
 
 function normalizarIngredientesEntrada(ingredientes = []) {
   return ingredientes
@@ -114,7 +116,7 @@ class RecetaService {
 
   async recuperarRecetaPorId(idReceta, usuarioRecuperado) {
     const recetaBd = await Receta.findOne({
-      where: { id_receta: idReceta, id_usuario_creador: usuarioRecuperado.id_usuario },
+      where: { id_receta: idReceta },
       include: [
         {
           model: Ingrediente,
@@ -127,6 +129,42 @@ class RecetaService {
     })
 
     if (!recetaBd) return null
+
+    let tienePermiso = false
+
+    // ¿El usuario es el creador de la receta?
+    if (recetaBd.id_usuario_creador === usuarioRecuperado.id_usuario) {
+      tienePermiso = true
+    } else {
+      // No es el creador, verificamos si está en su planning familiar
+      // Sacamos un array con los IDs de las familias a las que pertenece este usuario
+      const familiasDelUsuario = await UsuarioFamilia.findAll({
+        where: { id_usuario: usuarioRecuperado.id_usuario },
+        attributes: ['id_familia'],
+        raw: true
+      })
+
+      const idsFamilias = familiasDelUsuario.map(f => f.id_familia)
+
+      // Buscamos si existe la receta en el planning de ALGUNA de esas familias
+      if (idsFamilias.length > 0) {
+        const permisoCompartido = await Planning.findOne({
+          where: {
+            id_receta: idReceta,
+            id_familia: { [Op.in]: idsFamilias } // ¿Está el id_familia en su lista de familias?
+          }
+        })
+
+        if (permisoCompartido) {
+          tienePermiso = true
+        }
+      }
+    }
+
+    // Si después de comprobar todo NO tiene permiso, bloqueamos el acceso
+    if (!tienePermiso) {
+      throw new Error('No tienes permisos para ver esta receta.')
+    }
 
     // Mapeamos los datos al formato solicitado
     const recetaFormateada = {
