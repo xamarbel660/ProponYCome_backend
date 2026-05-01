@@ -375,12 +375,12 @@ class IAService {
             "descripcion": "Breve descripción de los pasos a seguir",
             "ingredientes": [
               {
-                "nombre_ingrediente": "arroz",
+                "nombre_ingrediente": "Arroz",
                 "cantidad": "1.00",
                 "unidad": "kg"
               },
               {
-                "nombre_ingrediente": "pollo",
+                "nombre_ingrediente": "Pollo",
                 "cantidad": "2.00",
                 "unidad": "pechugas"
               }
