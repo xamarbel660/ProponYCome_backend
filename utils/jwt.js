@@ -12,7 +12,7 @@ const generarToken = (usuario) => {
   // Firmamos el token
   // No envolvemos el token en una cookie (cookie-parser) ya que para moviles puede fallar
   return jwt.sign(payload, config.secretKey, {
-    expiresIn: '7d' // Por ahora que expire en 7 días
+    expiresIn: config.jwtExpiresIn // Por defecto 7d, configurable por env (JWT_EXPIRES_IN)
   })
 }
 

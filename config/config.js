@@ -28,7 +28,8 @@ module.exports = {
     name: process.env.DB_NAME || 'propon_y_come',
     port: process.env.DB_PORT || 3306
   },
-  secretKey: process.env.JWT_SECRET_KEY || 'change_me_in_production'
+  secretKey: process.env.JWT_SECRET_KEY || 'change_me_in_production',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d'
 }
 
 if (process.env.NODE_ENV !== 'test') {

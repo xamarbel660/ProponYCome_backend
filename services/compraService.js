@@ -14,8 +14,13 @@ const Ingrediente = models.ingrediente
 
 class CompraService {
   async recuperarIngredientesHaComprar(idFamilia, fechaLunes) {
-    // Calcular fecha domingo (lunes + 6 días) para el filtrado del planning
-    const lunes = new Date(fechaLunes) // Formato esperado: 'YYYY-MM-DD'
+    // Calcular fecha domingo (lunes + 6 dias) para el filtrado del planning.
+    // Normalizamos el dia de entrada a lunes en horario local.
+    const fechaBase = new Date(`${fechaLunes}T00:00:00`)
+    const diaSemana = fechaBase.getDay()
+    const diffAlLunes = fechaBase.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1)
+    const lunes = new Date(fechaBase)
+    lunes.setDate(diffAlLunes)
     lunes.setHours(0, 0, 0, 0)
     const domingo = new Date(lunes)
     domingo.setDate(lunes.getDate() + 6)
@@ -34,7 +39,9 @@ class CompraService {
       }]
     })
 
-    if (lista) return lista
+    const listaTieneItems = lista && Array.isArray(lista.LISTA_COMPRA_ITEMs) && lista.LISTA_COMPRA_ITEMs.length > 0
+
+    if (listaTieneItems) return lista
 
     // Si no existe, generar desde Planning
     const planesAprobados = await Planning.findAll({
@@ -77,27 +84,59 @@ class CompraService {
       })
     })
 
-    // Guardar en BD con Transacción
+    const items = Object.values(mapaIngredientes).map(item => ({
+      nombre_producto: item.nombre_ingrediente,
+      cantidad: item.cantidad_total,
+      unidad: item.unidad,
+      comprado: item.comprado,
+      es_manual: 0
+    }))
+
+    // Si existe lista pero estaba vacia, intentamos rellenarla.
+    if (lista) {
+      if (items.length === 0) return lista
+
+      const t = await sequelize.transaction()
+      try {
+        await ListaCompraItem.destroy({
+          where: { id_lista: lista.id_lista },
+          transaction: t
+        })
+
+        await ListaCompraItem.bulkCreate(
+          items.map(item => ({ ...item, id_lista: lista.id_lista })),
+          { transaction: t }
+        )
+
+        await lista.update({ fecha_generacion: lunes }, { transaction: t })
+
+        await t.commit()
+
+        return await ListaCompra.findByPk(lista.id_lista, {
+          include: [{ model: ListaCompraItem, as: 'LISTA_COMPRA_ITEMs' }]
+        })
+      } catch (error) {
+        await t.rollback()
+        throw error
+      }
+    }
+
+    // Guardar en BD con Transaccion
     const t = await sequelize.transaction()
     try {
       const nuevaLista = await ListaCompra.create({
         id_familia: idFamilia,
-        fecha_generacion: fechaLunes
+        fecha_generacion: lunes
       }, { transaction: t })
 
-      const items = Object.values(mapaIngredientes).map(item => ({
-        nombre_producto: item.nombre_ingrediente,
-        cantidad: item.cantidad_total,
-        unidad: item.unidad,
-        comprado: item.comprado,
-        es_manual: 0,
-        id_lista: nuevaLista.id_lista
-      }))
+      await ListaCompraItem.bulkCreate(
+        items.map(item => ({ ...item, id_lista: nuevaLista.id_lista })),
+        { transaction: t }
+      )
 
-      await ListaCompraItem.bulkCreate(items, { transaction: t })
       await t.commit()
 
-      // Devolver la lista completa recién creada
+      // Devolver la lista completa recien creada
       return await ListaCompra.findByPk(nuevaLista.id_lista, {
         include: [{ model: ListaCompraItem, as: 'LISTA_COMPRA_ITEMs' }]
       })
