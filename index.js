@@ -53,8 +53,8 @@ app.use('/api/compra', compraRoutes)
 // ============================================
 // Iniciar el servidor solo si no estamos en modo de prueba
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    logMensaje(`Servidor escuchando en el puerto ${PORT}`)
+  app.listen(PORT, '0.0.0.0', () => {
+    logMensaje(`Servidor escuchando en el puerto ${PORT} en todas las interfaces (0.0.0.0)`)
   })
 }
 // Exportamos la aplicación para poder hacer pruebas
