@@ -15,7 +15,7 @@ const ingredienteRoutes = require('./routes/ingredienteRoutes.js')
 const familiaRoutes = require('./routes/familiaRoutes.js')
 const iaRoutes = require('./routes/iaRoutes.js')
 const planningRoutes = require('./routes/planningRoutes.js')
-const compraRoutes = require('./routes/CompraRoutes.js')
+const compraRoutes = require('./routes/compraRoutes.js')
 
 // ============================================
 // INICIALIZACIÓN
