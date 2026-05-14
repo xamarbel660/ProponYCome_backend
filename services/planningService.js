@@ -102,14 +102,47 @@ class PlanningService {
       throw new Error('El usuario ya ha propuesto una receta para ese turno')
     }
 
+    // Verificar que no haya ya una propuesta APROBADA para ese turno, día y familia
+    const propuestaAprobada = await Planning.findOne({
+      where: {
+        id_familia: propuesta.id_familia,
+        fecha: propuesta.fecha,
+        turno_comida: propuesta.turno_comida,
+        estado: 'APROBADO'
+      }
+    })
+
+    if (propuestaAprobada) {
+      throw new Error('Ya hay una propuesta aprobada para ese turno')
+    }
+
+    const esAdminFamilia = Boolean(usuarioEnFamilia.es_administrador)
+    const estadoInicial = esAdminFamilia ? 'APROBADO' : 'PENDIENTE'
+
     // Crear la propuesta
     const resultado = await Planning.create({
       fecha: propuesta.fecha,
       turno_comida: propuesta.turno_comida,
       id_familia: propuesta.id_familia,
       id_usuario_propone: usuarioRecuperado.id_usuario,
-      id_receta: propuesta.id_receta
+      id_receta: propuesta.id_receta,
+      estado: estadoInicial
     })
+
+    // Si propone un admin, queda aprobada y se descartan alternativas del mismo turno.
+    if (esAdminFamilia) {
+      await Planning.update(
+        { estado: 'RECHAZADO' },
+        {
+          where: {
+            id_familia: propuesta.id_familia,
+            fecha: propuesta.fecha,
+            turno_comida: propuesta.turno_comida,
+            id_planning: { [Op.ne]: resultado.id_planning }
+          }
+        }
+      )
+    }
 
     return resultado
   }
