@@ -39,10 +39,6 @@ class CompraService {
       }]
     })
 
-    const listaTieneItems = lista && Array.isArray(lista.LISTA_COMPRA_ITEMs) && lista.LISTA_COMPRA_ITEMs.length > 0
-
-    if (listaTieneItems) return lista
-
     // Si no existe, generar desde Planning
     const planesAprobados = await Planning.findAll({
       where: {
@@ -61,6 +57,16 @@ class CompraService {
       }]
     })
 
+    // Mantener estado de compra para items automaticos ya existentes (misma clave ingrediente+unidad).
+    const compradoPorClave = {}
+    if (lista && Array.isArray(lista.LISTA_COMPRA_ITEMs)) {
+      lista.LISTA_COMPRA_ITEMs.forEach(item => {
+        if (item.es_manual) return
+        const clave = `${item.nombre_producto}-${item.unidad}`.toLowerCase()
+        compradoPorClave[clave] = Boolean(item.comprado)
+      })
+    }
+
     // Agrupar y sumar ingredientes
     const mapaIngredientes = {}
 
@@ -76,37 +82,36 @@ class CompraService {
           mapaIngredientes[clave] = {
             nombre_ingrediente: nombre,
             cantidad_total: 0,
-            unidad: unidad,
-            comprado: 0
+            unidad: unidad
           }
         }
         mapaIngredientes[clave].cantidad_total += parseFloat(ing.recetaIngrediente.cantidad)
       })
     })
 
-    const items = Object.values(mapaIngredientes).map(item => ({
+    const items = Object.entries(mapaIngredientes).map(([clave, item]) => ({
       nombre_producto: item.nombre_ingrediente,
       cantidad: item.cantidad_total,
       unidad: item.unidad,
-      comprado: item.comprado,
+      comprado: compradoPorClave[clave] ? 1 : 0,
       es_manual: 0
     }))
 
-    // Si existe lista pero estaba vacia, intentamos rellenarla.
+    // Si existe lista, actualizamos solo los items automaticos para mantener sincronizada la semana.
     if (lista) {
-      if (items.length === 0) return lista
-
       const t = await sequelize.transaction()
       try {
         await ListaCompraItem.destroy({
-          where: { id_lista: lista.id_lista },
+          where: { id_lista: lista.id_lista, es_manual: 0 },
           transaction: t
         })
 
-        await ListaCompraItem.bulkCreate(
-          items.map(item => ({ ...item, id_lista: lista.id_lista })),
-          { transaction: t }
-        )
+        if (items.length > 0) {
+          await ListaCompraItem.bulkCreate(
+            items.map(item => ({ ...item, id_lista: lista.id_lista })),
+            { transaction: t }
+          )
+        }
 
         await lista.update({ fecha_generacion: lunes }, { transaction: t })
 
